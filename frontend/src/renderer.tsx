@@ -1,23 +1,23 @@
 import { DynamicButton } from "@/components/dynamic/button"
-import { DynamicCard } from "@/components/dynamic/card"
 import { DynamicSlider } from "@/components/dynamic/slider"
-import { DynamicToggle } from "@/components/dynamic/toggle"
+import type { UICommand } from "./store/types";
 
 
-const renderElement = (element) => {
+export const renderElement = (element : UICommand, idx: number) => {
   switch (element.command) {
-    case 'ADD_TEXT':
-      return <DynamicText content={element.params.text} />;
     case 'ADD_BUTTON':
-      // The button needs a function to send its ID back to the backend
-      return <DynamicButton onClick={() => sendEventToServer(element.params.id)}>{element.params.text}</DynamicButton>;
+      return <DynamicButton key={idx}>{element.text}</DynamicButton>;
     case 'ADD_SLIDER':
-      return <DynamicSlider {...element.params} />;
-    // ... more cases
+      return (
+        <DynamicSlider
+          key={idx}
+          label={element.label}
+          min_val={element.min_val}
+          max_val={element.max_val}
+          default_val={element.default_val}
+        />
+      );
     default:
       return null;
   }
 };
-
-// It would receive the uiSchema from your global state and map over it
-return <div>{uiSchema.map(element => renderElement(element))}</div>;

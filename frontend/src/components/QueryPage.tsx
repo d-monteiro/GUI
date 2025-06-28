@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Send, Sparkles } from "lucide-react"
+import { Send } from "lucide-react"
 
 interface QueryPageProps {
   onSubmit?: (query: string) => void

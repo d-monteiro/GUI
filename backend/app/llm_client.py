@@ -19,8 +19,6 @@ class LLMClient:
             return LLMResponsePacket(
                 chat_message="Of course! Let's plan your trip. What's your budget?",
                 ui_commands=[
-                    {"command": "CLEAR_CONTAINER", "container_id": "main_workspace"},
-                    {"command": "ADD_TEXT", "text": "Trip Planner", "style": "header"},
                     {"command": "ADD_SLIDER", "slider_id": "budget_slider", "label": "Budget ($)", "min_val": 500, "max_val": 5000, "default_val": 2000},
                     {"command": "ADD_BUTTON", "button_id": "generate_plan", "text": "Generate Itinerary"},
                 ]

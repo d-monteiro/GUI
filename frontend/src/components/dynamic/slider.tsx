@@ -5,14 +5,43 @@ import type React from "react"
 import { forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
-interface DynamicSliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface DynamicSliderProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "min" | "max" | "defaultValue" | "id"> {
+  command?: string
+  container_id?: string
+  default_val?: number
   label?: string
-  showValue?: boolean
+  max_val?: number
+  min_val?: number
+  slider_id?: string
   variant?: "primary" | "secondary" | "accent"
+
+  // Callback for value changes
+  onValueChange?: (value: number) => void
 }
 
 const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
-  ({ className, label, showValue = true, variant = "primary", value, ...props }, ref) => {
+  (
+    {
+      className,
+      command,
+      container_id,
+      default_val = 0,
+      label,
+      max_val = 100,
+      min_val = 0,
+      variant = "primary",
+      slider_id,
+      value,
+      onValueChange,
+      onChange,
+      ...props
+    },
+    ref,
+  ) => {
+    // Use default_val if value is not provided
+    const currentValue = value !== undefined ? value : default_val
+
     const getTrackColor = () => {
       switch (variant) {
         case "secondary":
@@ -35,29 +64,41 @@ const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
       }
     }
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = Number(e.target.value)
+      onValueChange?.(newValue)
+      onChange?.(e)
+    }
+
     return (
       <div className="space-y-2">
         {label && (
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-[#affddb]">{label}</label>
-            {showValue && <span className="text-sm text-[#94ebdf] bg-[#94ebdf]/10 px-2 py-1 rounded">{value}</span>}
+              <span className="text-sm text-[#94ebdf] bg-[#94ebdf]/10 px-2 py-1 rounded">
+                {label?.includes("$") ? `$${currentValue.toLocaleString()}` : currentValue}
+              </span>
           </div>
         )}
         <div className="relative">
           <input
             type="range"
+            id={slider_id}
+            min={min_val}
+            max={max_val}
+            value={currentValue}
+            onChange={handleChange}
             className={cn(
               "w-full h-3 bg-black/30 backdrop-blur-xl rounded-full appearance-none cursor-pointer slider border border-white/10 shadow-inner",
               className,
             )}
             style={{
-              background: `linear-gradient(to right, ${getTrackColor()} 0%, ${getTrackColor()} ${((Number(value) - Number(props.min || 0)) / (Number(props.max || 100) - Number(props.min || 0))) * 100}%, #374151 ${((Number(value) - Number(props.min || 0)) / (Number(props.max || 100) - Number(props.min || 0))) * 100}%, #374151 100%)`,
+              background: `linear-gradient(to right, ${getTrackColor()} 0%, ${getTrackColor()} ${((Number(currentValue) - Number(min_val)) / (Number(max_val) - Number(min_val))) * 100}%, #374151 ${((Number(currentValue) - Number(min_val)) / (Number(max_val) - Number(min_val))) * 100}%, #374151 100%)`,
             }}
-            value={value}
             ref={ref}
             {...props}
           />
-          <style jsx>{`
+          <style>{`
             .slider::-webkit-slider-thumb {
               appearance: none;
               height: 24px;

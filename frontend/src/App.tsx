@@ -1,20 +1,27 @@
 "use client"
 
+import { useWebSocket } from "@/hooks/WebSocket"
+
 import { useState } from 'react'
 import { Background } from "@/components/layout/background"
-import { DynamicButton } from "@/components/dynamic/button"
 import { WelcomeAnimation } from "@/components/WelcomeAnimation"
-import { QueryPage } from '@/components/QueryPage'
+import { QueryPage } from "@/components/QueryPage"
+import { DynamicUI } from "@/components/dynamic/UI"
+import { DynamicSlider } from "@/components/dynamic/slider"
 
 type AppStep = "welcome" | "query" | "gui";
 
 function App(){
+  const { send } = useWebSocket();
+
   const [currentStep, setCurrentStep] = useState<AppStep>("welcome");
 
   const handleSubmit = (query: string) => {
-    console.log("Submitted query:", query)
+    send({
+      type: "user_message",
+      content: query,
+    });
     setCurrentStep("gui")
-    // await fetch('/api/query', { method: 'POST', body: JSON.stringify({ query }) })
   }
 
   const renderContent = () => {
@@ -31,10 +38,8 @@ function App(){
          return (
           <Background variant="mesh">
           <div className="p-8">
-            <h1 className="text-2xl text-white">This is the GUI step.</h1>
-            <DynamicButton onClick={() => setCurrentStep("welcome")}>
-              Reset
-            </DynamicButton>
+            <DynamicUI/>
+
           </div>
           </Background>
         );

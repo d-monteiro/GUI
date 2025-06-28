@@ -21,6 +21,7 @@ class ConversationHandler:
 
         if message_type == "user_message":
             content = message_data.get("content", "")
+            print(message_data)
             self._add_to_history("user", content)
 
         elif message_type == "ui_event":

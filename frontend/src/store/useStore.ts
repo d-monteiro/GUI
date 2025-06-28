@@ -1,6 +1,6 @@
 // frontend/src/store/useStore.ts
 import { create } from 'zustand';
-import { UICommand, ChatMessage, BackendPacket } from './types';
+import type { UICommand, ChatMessage, BackendPacket } from './types';
 
 // Define the shape of our store's state
 interface AppState {
@@ -30,7 +30,7 @@ export const useStore = create<AppState>()((set, get) => ({
   handleBackendPacket: (packet) => {
     // This is the core action that updates state based on the LLM's response.
     console.log("Received packet from backend:", packet);
-
+    
     // Add the assistant's chat message to the history
     if (packet.chat_message) {
       const assistantMessage: ChatMessage = { role: "assistant", content: packet.chat_message };
