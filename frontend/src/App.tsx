@@ -5,9 +5,9 @@ import { useWebSocket } from "@/hooks/WebSocket"
 import { useState } from 'react'
 import { Background } from "@/components/layout/background"
 import { WelcomeAnimation } from "@/components/WelcomeAnimation"
+import { ChatBlob } from "@/components/ChatBlob";
 import { QueryPage } from "@/components/QueryPage"
 import { DynamicUI } from "@/components/dynamic/UI"
-import { DynamicSlider } from "@/components/dynamic/slider"
 
 type AppStep = "welcome" | "query" | "gui";
 
@@ -39,7 +39,7 @@ function App(){
           <Background variant="mesh">
           <div className="p-8">
             <DynamicUI/>
-
+            <ChatBlob />
           </div>
           </Background>
         );

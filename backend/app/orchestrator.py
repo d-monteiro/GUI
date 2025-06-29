@@ -1,13 +1,13 @@
 # backend/app/orchestrator.py
 from fastapi import WebSocket
 from .llm_client import LLMClient
-from .models import UIEvent
+from .models import UIEvent, AddButtonCommand, AddSliderCommand, AddTextCommand, ClearContainerCommand
 
 class ConversationHandler:
     """Manages the state and logic for a single user conversation."""
     def __init__(self):
         self.history = []
-        self.llm_client = LLMClient() # Using our mock client
+        self.llm_client = LLMClient()
         print("New ConversationHandler created.")
 
     def _add_to_history(self, role: str, content: str):

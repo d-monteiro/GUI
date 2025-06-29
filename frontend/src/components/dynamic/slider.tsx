@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
-import { forwardRef } from "react"
+import { forwardRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
-interface DynamicSliderProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "min" | "max" | "defaultValue" | "id"> {
+interface DynamicSliderProps {
+  // Command-based parameters (new API)
   command?: string
   container_id?: string
   default_val?: number
@@ -14,9 +13,13 @@ interface DynamicSliderProps
   max_val?: number
   min_val?: number
   slider_id?: string
-  variant?: "primary" | "secondary" | "accent"
 
-  // Callback for value changes
+  // Additional props
+  showValue?: boolean
+  variant?: "primary" | "secondary" | "accent"
+  className?: string
+
+  // Callbacks
   onValueChange?: (value: number) => void
 }
 
@@ -30,17 +33,15 @@ const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
       label,
       max_val = 100,
       min_val = 0,
-      variant = "primary",
       slider_id,
-      value,
+      showValue = true,
+      variant = "primary",
       onValueChange,
-      onChange,
-      ...props
     },
     ref,
   ) => {
-    // Use default_val if value is not provided
-    const currentValue = value !== undefined ? value : default_val
+    // Internal state for the slider value
+    const [internalValue, setInternalValue] = useState(default_val)
 
     const getTrackColor = () => {
       switch (variant) {
@@ -66,8 +67,14 @@ const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = Number(e.target.value)
+      setInternalValue(newValue)
       onValueChange?.(newValue)
-      onChange?.(e)
+    }
+
+    const formatValue = (value: number) => {
+      if (label?.includes("$")) return `$${value.toLocaleString()}`
+      if (label?.includes("%")) return `${value}%`
+      return value.toString()
     }
 
     return (
@@ -75,29 +82,32 @@ const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
         {label && (
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-[#affddb]">{label}</label>
+            {showValue && (
               <span className="text-sm text-[#94ebdf] bg-[#94ebdf]/10 px-2 py-1 rounded">
-                {label?.includes("$") ? `$${currentValue.toLocaleString()}` : currentValue}
+                {formatValue(internalValue)}
               </span>
+            )}
           </div>
         )}
+
         <div className="relative">
           <input
             type="range"
             id={slider_id}
             min={min_val}
             max={max_val}
-            value={currentValue}
+            value={internalValue}
             onChange={handleChange}
             className={cn(
               "w-full h-3 bg-black/30 backdrop-blur-xl rounded-full appearance-none cursor-pointer slider border border-white/10 shadow-inner",
               className,
             )}
             style={{
-              background: `linear-gradient(to right, ${getTrackColor()} 0%, ${getTrackColor()} ${((Number(currentValue) - Number(min_val)) / (Number(max_val) - Number(min_val))) * 100}%, #374151 ${((Number(currentValue) - Number(min_val)) / (Number(max_val) - Number(min_val))) * 100}%, #374151 100%)`,
+              background: `linear-gradient(to right, ${getTrackColor()} 0%, ${getTrackColor()} ${((internalValue - min_val) / (max_val - min_val)) * 100}%, #374151 ${((internalValue - min_val) / (max_val - min_val)) * 100}%, #374151 100%)`,
             }}
             ref={ref}
-            {...props}
           />
+
           <style>{`
             .slider::-webkit-slider-thumb {
               appearance: none;
@@ -135,6 +145,7 @@ const DynamicSlider = forwardRef<HTMLInputElement, DynamicSliderProps>(
     )
   },
 )
+
 DynamicSlider.displayName = "DynamicSlider"
 
 export { DynamicSlider }

@@ -1,0 +1,95 @@
+[
+  {
+    "name": "AddButtonCommand",
+    "description": "Adds a button to the UI in the specified container.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string",
+          "description": "The ID of the container where the button will be placed."
+        },
+        "button_id": {
+          "type": "string",
+          "description": "A unique identifier for the button."
+        },
+        "text": {
+          "type": "string",
+          "description": "The label text displayed on the button."
+        }
+      },
+      "required": ["container_id", "button_id", "text"]
+    }
+  },
+  {
+    "name": "AddSliderCommand",
+    "description": "Adds a slider input to the UI in the specified container.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string",
+          "description": "The ID of the container where the slider will be placed."
+        },
+        "slider_id": {
+          "type": "string",
+          "description": "A unique identifier for the slider."
+        },
+        "label": {
+          "type": "string",
+          "description": "The label text displayed next to the slider."
+        },
+        "min_val": {
+          "type": "number",
+          "description": "The minimum value of the slider."
+        },
+        "max_val": {
+          "type": "number",
+          "description": "The maximum value of the slider."
+        },
+        "default_val": {
+          "type": "number",
+          "description": "The default value of the slider."
+        }
+      },
+      "required": ["container_id", "slider_id", "label", "min_val", "max_val", "default_val"]
+    }
+  },
+  {
+    "name": "AddTextCommand",
+    "description": "Adds a text element to the UI in the specified container.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string",
+          "description": "The ID of the container where the text will be placed."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content to display."
+        },
+        "style": {
+          "type": "string",
+          "enum": ["header", "body", "code"],
+          "description": "The style of the text (header, body, or code)."
+        }
+      },
+      "required": ["container_id", "text"]
+    }
+  },
+  {
+    "name": "ClearContainerCommand",
+    "description": "Removes all UI elements from the specified container.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "container_id": {
+          "type": "string",
+          "description": "The ID of the container to clear."
+        }
+      },
+      "required": ["container_id"]
+    }
+  }
+]
