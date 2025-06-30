@@ -56,29 +56,6 @@
     }
   },
   {
-    "name": "AddTextCommand",
-    "description": "Adds a text element to the UI in the specified container.",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "container_id": {
-          "type": "string",
-          "description": "The ID of the container where the text will be placed."
-        },
-        "text": {
-          "type": "string",
-          "description": "The text content to display."
-        },
-        "style": {
-          "type": "string",
-          "enum": ["header", "body", "code"],
-          "description": "The style of the text (header, body, or code)."
-        }
-      },
-      "required": ["container_id", "text"]
-    }
-  },
-  {
     "name": "ClearContainerCommand",
     "description": "Removes all UI elements from the specified container.",
     "parameters": {

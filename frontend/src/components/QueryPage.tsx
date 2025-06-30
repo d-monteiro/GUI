@@ -20,7 +20,7 @@ const QueryPage = ({
   const [query, setQuery] = useState("")
 
   const exampleQuestions = [
-    "Help me plan my trip to Japan.",
+    "I want to plan a trip to Tokyo.",
     "Help me clean up this data.",
     "?",
     "?",

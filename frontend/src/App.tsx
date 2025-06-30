@@ -8,6 +8,7 @@ import { WelcomeAnimation } from "@/components/WelcomeAnimation"
 import { ChatBlob } from "@/components/ChatBlob";
 import { QueryPage } from "@/components/QueryPage"
 import { DynamicUI } from "@/components/dynamic/UI"
+import { DynamicText } from "@/components/dynamic/text"
 
 type AppStep = "welcome" | "query" | "gui";
 
