@@ -1,31 +1,83 @@
+# llm_client.py
 import os
-import json
-from google import genai
-from google.genai import types
 from dotenv import load_dotenv
-from typing import List, Dict, Any
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.tools import tool
+from pydantic import BaseModel
+from typing import List
+from .models import LLMResponsePacket 
+
+
 from .models import AddButtonCommand, AddSliderCommand, AddTextCommand, ClearContainerCommand
 
-
-from .models import LLMResponsePacket, AnyCommand  # Your local models
-
 load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
 
+COMMAND_MODELS = {
+    "ADD_BUTTON": AddButtonCommand,
+    "ADD_SLIDER": AddSliderCommand,
+    "ADD_TEXT": AddTextCommand,
+    "CLEAR_CONTAINER": ClearContainerCommand,
+}
+
+# Define your UI commands using @tool (automatically supports function calling)
+@tool
+def AddButtonCommand(container_id: str, button_id: str, text: str) -> dict:
+    """Adds a button to a UI container."""
+    return {
+        "command": "ADD_BUTTON",
+        "container_id": container_id,
+        "button_id": button_id,
+        "text": text
+    }
+
+@tool
+def AddSliderCommand(container_id: str, slider_id: str, label: str, min_val: int, max_val: int, default_val: int) -> dict:
+    """Adds a button to a UI container."""
+
+    return {
+        "command": "ADD_SLIDER",
+        "container_id": container_id,
+        "slider_id": slider_id,
+        "label": label,
+        "min_val": min_val,
+        "max_val": max_val,
+        "default_val": default_val
+    }
+
+@tool
+def AddTextCommand(container_id: str, text: str, style: str = "body") -> dict:
+    """Adds a button to a UI container."""
+   
+    return {
+        "command": "ADD_TEXT",
+        "container_id": container_id,
+        "text": text,
+        "style": style
+    }
+
+@tool
+def ClearContainerCommand(container_id: str) -> dict:
+    """Adds a button to a UI container."""
+   
+    return {
+        "command": "CLEAR_CONTAINER",
+        "container_id": container_id
+    }
+
+
+# System prompt
 SYSTEM_PROMPT = """
 You are an advanced AI assistant named **Kai** (Kreator of Adaptive Interfaces). Your core function is to help users solve complex tasks by **constructing adaptive UIs in real-time** using structured function calls. You are a **collaborator, not a passive chatbot.** Your responses must always be purposeful, contextual, and actionable.
-
+Never output JSON or describe UI in text.
+Always use the provided tools to add UI elements.
+Respond to the user with a chat message as plain text.
 ---
 
 ### **CORE BEHAVIOR RULES**
 
-1. ### **Think First (<thinking>):**
-   Every UI generation must be preceded by a `<thinking>` block. This block is your internal planning space:
-   - Break the task down step-by-step.
-   - Define what information is missing.
-   - Decide what UI components are appropriate to collect it.
-   - This block is **not shown to the user**.
+1. Before building, think step-by-step in a <thinking> block (not shown to the user).
+After thinking, use function calls to add UI elements.
 
 2. ### **Always Build with Functions:**
    Do **not** describe interfaces in plain text.
@@ -43,124 +95,56 @@ You are an advanced AI assistant named **Kai** (Kreator of Adaptive Interfaces).
    - Remember previous user answers, selected options, or filled inputs.
    - Update or extend the interface based on what has already been shown or gathered.
 
-5. ### **Respond with Clarity:**
-   Every UI update must include a `chat_message`:
-   - Acknowledge the user intent.
-   - Briefly explain what the new UI allows them to do.
-   - Keep it clear, friendly, and purposeful.
-
----
-
-### **EXAMPLE OUTPUT**
-
-**User Message:**  
-_"I want to plan a trip to Tokyo."_
-
-**Your Response:**
-```txt
-<thinking>
-The user wants to plan a trip. This is a complex task.
-1. First, I need to know their budget. A slider is perfect for this.
-2. Next, I need their primary interest to tailor the plan. A dropdown is good for predefined choices.
-3. Finally, I need a button to trigger the planning process once they've filled out the information.
-4. I will clear any previous UI to start fresh.
-</thinking>
-{
-  "chat_message": "Great! I can help with that. To start, what is your budget and main interest for the trip?",
-  "ui_commands": [
-    { "command": "CLEAR_CONTAINER", "container_id": "main_workspace" },
-    { "command": "ADD_TEXT", "container_id": "main_workspace", "text": "Tokyo Trip Planner", "style": "header" },
-    { "command": "ADD_SLIDER", "container_id": "main_workspace", "slider_id": "budget", "label": "Budget ($)", "min_val": 500, "max_val": 5000, "default_val": 1500 },
-    { "command": "AddDropdownCommand", "container_id": "main_workspace", "dropdown_id": "interest", "label": "Main Interest", "options": [
-        { "value": "culture", "label": "Culture" },
-        { "value": "food", "label": "Food" },
-        { "value": "technology", "label": "Technology" },
-        { "value": "nature", "label": "Nature" }
-      ], "placeholder": "Select an interest"
-    },
-    { "command": "AddButtonCommand", "container_id": "main_workspace", "button_id": "generate_plan", "text": "Generate Plan" }
-  ]
-}
 
 """
 
-# Load function declarations directly from schema.json
-SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "../schema.json")
-with open(SCHEMA_PATH, "r") as f:
-    function_declarations = json.load(f)
-
-tools = types.Tool(function_declarations=function_declarations)
-config = types.GenerateContentConfig(tools=[tools])
-
 class LLMClient:
     def __init__(self):
-        self.config = config
-
-    def get_response(self, history: List[Dict[str, str]]) -> LLMResponsePacket:
-        print("Sending request to Gemini with history...")
-
-        # Build Gemini-style history
-        gemini_history = [
-            {
-                "role": "user",
-                "parts": [{"text": f"System Instructions: {SYSTEM_PROMPT}\n\nPlease acknowledge these instructions."}]
-            },
-            {
-                "role": "model",
-                "parts": [{"text": "I understand. I am Kai, and I will help users by building interactive UIs using function calls. I will think step-by-step and be proactive in my assistance."}]
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-flash",
+            google_api_key=os.getenv("GEMINI_API_KEY"),
+            model_kwargs={
+                "tools": [
+                    AddButtonCommand,
+                    AddSliderCommand,
+                    AddTextCommand,
+                    ClearContainerCommand,
+                ]
             }
-        ]
+        )
+
+    def get_response(self, history: List[dict]) -> LLMResponsePacket:
+        """Calls Gemini with history and returns parsed function calls + message."""
+        messages = [SystemMessage(content=SYSTEM_PROMPT)]
+        messages.append(AIMessage(content="I understand. I am Kai..."))
+
         for msg in history:
-            gemini_history.append({
-                "role": msg["role"],
-                "parts": [{"text": msg["content"]}]
-            })
-
-        try:
-            response = genai.Client().models.generate_content(
-                model="gemini-1.5-flash",
-                contents=gemini_history,
-                config=self.config,
-            )
-            print(response)
-
-
-            COMMAND_MODELS = {
-                "AddButtonCommand": AddButtonCommand,
-                "AddSliderCommand": AddSliderCommand,
-                "AddTextCommand": AddTextCommand,
-                "ClearContainerCommand": ClearContainerCommand,
-            }
-
-            ui_commands = []
-            candidates = getattr(response, "candidates", None)
-            if candidates and len(candidates) > 0:
-                parts = getattr(candidates[0].content, "parts", None)
-                if parts:
-                    for part in parts:
-                        if hasattr(part, "function_call") and part.function_call:
-                            func_name = part.function_call.name
-                            args = part.function_call.args
-                            model_cls = COMMAND_MODELS.get(func_name)
-                            if model_cls:
-                                try:
-                                    ui_commands.append(model_cls(**args))
-                                except Exception as e:
-                                    print(f"Error parsing {func_name}: {e}")
-                            else:
-                                print(f"Unknown function: {func_name}")
+            role = msg["role"]
+            content = msg["content"]
+            if role == "user":
+                messages.append(HumanMessage(content=content))
             else:
-                print("No candidates or parts in Gemini response.")
+                messages.append(AIMessage(content=content))
 
+        response = self.llm.invoke(messages)
 
+        # Parse tool calls into Pydantic models
+        parsed_tools = getattr(response, "tool_calls", [])
+        ui_commands = []
+        for tool_call in parsed_tools:
+            # tool_call may be a dict or an object with .args
+            data = tool_call if isinstance(tool_call, dict) else getattr(tool_call, "args", {})
+            command_type = data.get("command")
+            model_cls = COMMAND_MODELS.get(command_type)
+            if model_cls:
+                try:
+                    ui_commands.append(model_cls(**data))
+                except Exception as e:
+                    print(f"Error parsing {command_type}: {e}")
 
-            print(f"---------------- LLM Thinking ----------------------")
+        chat_message = getattr(response, "content", "")
 
-            return LLMResponsePacket(
-                #chat_message=chat_message,
-                ui_commands=ui_commands
-            )
-
-        except Exception as e:
-            print(f"Error calling Gemini API: {str(e)}")
-            return LLMResponsePacket(chat_message=f"Error: {str(e)}")
+        return LLMResponsePacket(
+            chat_message=chat_message,
+            ui_commands=ui_commands
+        )
